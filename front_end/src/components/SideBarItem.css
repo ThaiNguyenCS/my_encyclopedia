@@ -1,0 +1,17 @@
+.side-bar-item
+{
+    cursor: pointer;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 300;
+}
+
+.side-bar-item:hover
+{
+    background-color: var(--option-hover-color);
+}
+
+.side-bar-item:active
+{
+    background-color: var(--option-active-color);
+}

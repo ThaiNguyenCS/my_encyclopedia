@@ -1,0 +1,14 @@
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  --option-hover-color: rgb(225, 225, 225);
+  --option-active-color: rgb(193, 193, 193);
+  --header-height: 60px;
+}
+
+:root
+{
+  font-size: 16px;
+  font-family: Lexend, sans-serif;
+}
