@@ -20,13 +20,15 @@ async function action({ request }) {
 }
 
 const AddMovie = () => {
+    console.log("Add movie component re rendering");
     const [movieArr, setMovieArr] = useState([]);
-
     const [titleInput, setTitleInput] = useState("");
     const [deductionArr, setDeductionArr] = useState([]);
     const [uploadedFile, setUploadedFile] = useState(null);
     const [deductionInput, setDeductionInput] = useState("");
     const [imdbInput, setImdbInput] = useState("");
+    const [imagePreview, setImagePreview] = useState(null);
+
     const fileRef = useRef();
     const submit = useSubmit();
 
@@ -70,28 +72,60 @@ const AddMovie = () => {
         setTitleInput(event.target.value);
     };
 
-    const handleAddDeduction = () => {
+    const handleAddDeduction = (event) => {
         if (deductionInput.length >= 10) {
             setDeductionArr((state) => [...state, deductionInput]);
             setDeductionInput("");
         }
     };
 
+    const handleAddDeductionByEnter = (event) => {
+        if (event.key === "Enter") {
+            if (deductionInput.length >= 10) {
+                setDeductionArr((state) => [...state, deductionInput]);
+                setDeductionInput("");
+            }
+        }
+    };
+
     const handleUploadFile = (event) => {
-        console.log("number of files: " + event.target.files.length)
+        if (event.target.files === null) {
+            return;
+        }
+        console.log("number of files: " + event.target.files.length);
         // setUploadedFile(event.target.files[0]);
         setUploadedFile(event.target.files);
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+
+            reader.addEventListener("loadend", (event) => {
+                console.log("onloadend");
+                console.log(reader.result);
+                setImagePreview(reader.result);
+            });
+
+            // reader.onloadend = (event) => {};
+            reader.readAsDataURL(file);
+        }
     };
 
     function handlePostMovieData() {
         const movieFormData = new FormData();
+        if(titleInput === '')
+        {
+            window.alert("Empty movie title")
+            return;
+        }
         movieFormData.append("title", titleInput);
         movieFormData.append("imdb", imdbInput);
-        movieFormData.append("deductions", JSON.stringify(deductionArr));
-        for(let i = 0; i < uploadedFile.length; i++)
-        {
-            movieFormData.append("uploadedFile", uploadedFile[i]);
+        movieFormData.append("comments", JSON.stringify(deductionArr));
+        if (uploadedFile) {
+            for (let i = 0; i < uploadedFile.length; i++) {
+                movieFormData.append("uploadedFile", uploadedFile[i]);
+            }
         }
+
         // movieFormData.append("uploadedFile", uploadedFile);
         fileRef.current.value = ""; // reset the file name
         resetStates();
@@ -108,9 +142,34 @@ const AddMovie = () => {
         setUploadedFile(null);
     }
 
+    const deleteComment = (idx) => {
+        const newCommentArr = [...deductionArr];
+        newCommentArr.splice(idx, 1);
+        setDeductionArr(newCommentArr);
+    }
+
     return (
         <>
             <div>Add Movie</div>
+            <div
+                style={{
+                    color: "black",
+                    width: "180px",
+                    aspectRatio: "3/4",
+                    display: "grid",
+                    placeItems: "center",
+                }}
+            >
+                {imagePreview ? (
+                    <img
+                        src={imagePreview}
+                        style={{ width: "180px", aspectRatio: "3/4" }}
+                    />
+                ) : (
+                    "No poster"
+                )}
+            </div>
+
             <div>
                 <label htmlFor="movieTitle">Movie Title</label>
                 <input
@@ -131,17 +190,18 @@ const AddMovie = () => {
                 />
             </div>
 
-            <label htmlFor="deduction">Deduction</label>
+            <label htmlFor="deduction">Comments</label>
             <div>
                 <textarea
                     name="deduction"
                     id="deduction"
                     onChange={(e) => handleDeductionInput(e)}
                     value={deductionInput}
+                    onKeyDown={(e) => handleAddDeductionByEnter(e)}
                 ></textarea>
                 <button
-                    onClick={() => {
-                        handleAddDeduction();
+                    onClick={(e) => {
+                        handleAddDeduction(e);
                     }}
                 >
                     Add
@@ -153,14 +213,16 @@ const AddMovie = () => {
                 name="uploadedFile"
                 id="uploadedFile"
                 ref={fileRef}
-                multiple
                 onChange={(e) => handleUploadFile(e)}
             />
-
             <button onClick={() => handlePostMovieData()}>Submit</button>
             <ul>
-                {deductionArr.length > 0 &&
-                    deductionArr.map((item, idx) => <li key={idx}>{item}</li>)}
+                {deductionArr &&
+                    deductionArr.length > 0 &&
+                    deductionArr.map((item, idx) => (<>
+                    <li key={idx}>{item}</li>
+                    <button onClick={() => deleteComment(idx)}>Delete</button>
+                    </>))}
             </ul>
 
             {/* <ul>

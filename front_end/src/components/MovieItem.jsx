@@ -12,12 +12,16 @@ const MovieItem = (props) => {
     const handleClick = () => {
         navigate(id);
     };
-   
 
     return (
         <>
-            <div className="movie-item-container" onClick={handleClick}>
-                <img className="movie-poster" src={Interstellar} alt="" />
+            <div className="movie-item-container">
+                <img
+                    className="movie-poster"
+                    src={Interstellar}
+                    alt=""
+                    onClick={handleClick}
+                />
 
                 <div className="imdb-rating">
                     <IoStarOutline className="imdb-rating-star" />
@@ -26,8 +30,7 @@ const MovieItem = (props) => {
                 <div className="movie-title" onClick={handleClick}>
                     {title}
                 </div>
-                <Rating name="simple-controlled"></Rating>
-                <div className="my-rating">{myRating}</div>
+                <Rating name="my-rating" readOnly value={myRating || 2}></Rating>
             </div>
         </>
     );

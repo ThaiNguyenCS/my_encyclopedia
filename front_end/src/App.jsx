@@ -11,11 +11,11 @@ function App() {
     return (
         <>
             {/* <BrowserRouter> */}
-                <Header></Header>
-                {sideBarStatus.isOpen && <SideBar></SideBar>}
-                <div className="main-page-body">
-                    <Outlet></Outlet>
-                </div>
+            <Header></Header>
+            {sideBarStatus.isOpen && <SideBar></SideBar>}
+            <div className="main-page-body">
+                <Outlet></Outlet>
+            </div>
             {/* // </BrowserRouter> */}
         </>
     );

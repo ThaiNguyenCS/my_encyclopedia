@@ -7,17 +7,17 @@ import store from "./redux-store.js";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Entertainment from "./components/Entertainment";
 import MainPage from "./components/MainPage";
-import Movies from "./components/Movies";
+import Movies, {loader as moviesLoader}from "./components/Movies";
 import Books from "./components/Books";
 import Videos from "./components/Videos";
-import MovieDetail, { loader as movieDetailLoader } from "./components/MovieDetail";
+import MovieDetail, { loader as movieDetailLoader, action as movieDetailAction } from "./components/MovieDetail";
 import ErrorComponent from "./components/ErrorComponent";
 import AddMovie from "./components/AddMovie";
 import {
     loader as addMovieLoader,
     action as addMovieAction,
 } from "./components/AddMovie";
-
+import Dummy, {loader as dummyLoader} from "./components/Dummy.jsx";
 
 const router = createBrowserRouter([
     {
@@ -27,6 +27,7 @@ const router = createBrowserRouter([
                 <App></App>
             </Provider>
         ),
+        errorElement: <ErrorComponent/>,
         children: [
             {
                 path: "home",
@@ -36,8 +37,8 @@ const router = createBrowserRouter([
                 path: "entertainment",
                 element: <Entertainment />,
                 children: [
-                    { path: "movies", element: <Movies></Movies> },
-                    { path: "movies/:movieId", element: <MovieDetail></MovieDetail>, loader: movieDetailLoader  },
+                    { path: "movies", element: <Movies></Movies>, loader: moviesLoader },
+                    { path: "movies/:movieId", element: <MovieDetail></MovieDetail>, loader: movieDetailLoader, action: movieDetailAction  },
                     {
                         path: "movies/add-movie",
                         element: <AddMovie></AddMovie>,
@@ -48,6 +49,11 @@ const router = createBrowserRouter([
                     { path: "videos", element: <Videos></Videos> },
                 ],
             },
+            {
+                path: "dummy",
+                element: <Dummy/>,
+                loader: dummyLoader
+            }
         ],
     },
 ]);

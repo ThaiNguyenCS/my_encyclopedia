@@ -2,7 +2,18 @@ const express = require("express");
 const mysql = require("mysql2");
 const multer = require("multer");
 const path = require("path");
-require("dotenv").config({path: '.env'}); // for environment file
+const { v4: uuidv4 } = require("uuid");
+const {
+    getMovieByID,
+    getMovies,
+    getMovieComments,
+    deleteMovieByID,
+    addMovieToDatabase,
+    addCommentToMovie,
+    modifyRatingByID
+} = require("./database");
+
+require("dotenv").config({ path: ".env" }); // for environment file
 const PORT = process.env.PORT || 5000;
 
 const storage = multer.diskStorage({
@@ -24,52 +35,81 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 const app = express();
 
-app.use(express.urlencoded({ extended: true })); 
+app.use(express.urlencoded({ extended: true }));
 
-const database = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-});
-
-database.connect((err) => {
-    if(err) throw err
-    console.log("Database is connected");
-})
+// database.connect((err) => {
+//     if (err) throw err;
+//     console.log("Database is connected");
+// });
 
 app.use(express.static("../front_end/dist"));
 
-app.get("/database/movies/:movieId", (req, res) => {
-    const QUERY = `SELECT * FROM movies WHERE id = ${req.params.movieId}`;
-    console.log(QUERY);
-    database.query(QUERY, (err, result, field) => {
-        if (err) throw res.status(404).send("Movie not Found");
-        // console.log(typeof result)
-        return res.status(200).json(result);
-    });
+app.get("/database/movies/:movieId", async (req, res) => {
+    const result = await getMovieByID(req.params.movieId);
+    if (result.result) {
+        return res.status(200).json(result.data);
+    } else return res.status(500).send("GET MOVIE ERROR");
+});
+
+app.delete("/database/movies/:movieId", async (req, res) => {
+    const result = await deleteMovieByID(req.params.movieId);
+    if (result.result) {
+        return res.status(200).json(result.data);
+    } else return res.status(500).send("DELETE ERROR");
+});
+
+app.get("/database/movies/:movieId/comments", async (req, res) => {
+    const result = await getMovieComments(req.params.movieId);
+    if (result.result) {
+        return res.status(200).json(result.data);
+    }
+    console.log(result.error);
+    return res.status(503).send("Cannot fetch movie comments");
+});
+
+app.get("/database/movies", async (req, res) => {
+    const result = await getMovies();
+    if (result.result) {
+        return res.status(200).json(result.data);
+    }
+    console.log(result.error);
+    return res.status(503).send("Cannot fetch movies");
 });
 
 app.post(
     "/entertainment/movies/add-movie",
     upload.array("uploadedFile"),
-    (req, res) => {
+    async (req, res) => {
         console.log(req.body);
         console.log(req.files);
-        // const {title, imdb, deductions} = req.body;
-        // console.log(title)
-        // console.log(imdb)
-        // console.log(deductions)
-        // const QUERY = `INSERT INTO movies (title, imdb, myRating, deductions) VALUES ()`;
-        // console.log(QUERY);
-        // database.query(QUERY, (err, result, field) => {
-        //     if (err) throw res.status(404).send("Movie not Found");
-        //     // console.log(typeof result)
-        //     return res.status(200).json(result);
-        // });
-        res.end("OK");
+        const result = await addMovieToDatabase(req.body);
+        if (result.result) {
+            return res.status(200).json(result.data);
+        }
+        return res.status(500).send("Add movie fail");
     }
 );
+
+app.patch("/database/movies/:movieID/rating", upload.none(), async (req, res) => {
+    console.log("PATCH /database/movies/:movieID/rating")
+    console.log(req.body)
+    const result = await modifyRatingByID(req.body, req.params.movieID);
+    if (result.result) {
+        return res.status(200).json(result.data);
+    }
+    return res.status(500).send("Change movie rating fail");
+
+})
+
+app.patch("/database/movies/:movieID/comments", upload.none(), async (req, res) => {
+    console.log(req.body)
+    const result = await addCommentToMovie(req.body, req.params.movieID);
+    if (result.result) {
+        return res.status(200).json(result.data);
+    }
+    console.log(result.error);
+    return res.status(503).send("Cannot add comment");
+})
 
 app.get("*", (req, res) => {
     res.sendFile(path.join(__dirname, "..", "front_end/dist/index.html"));
